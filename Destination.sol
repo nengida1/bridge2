@@ -9,10 +9,10 @@ contract Destination is AccessControl {
     bytes32 public constant WARDEN_ROLE = keccak256("BRIDGE_WARDEN_ROLE");
     bytes32 public constant CREATOR_ROLE = keccak256("CREATOR_ROLE");
 
-    // wrapped => underlying
+    // underlying => wrapped
     mapping(address => address) public underlying_tokens;
 
-    // underlying => wrapped
+    // wrapped => underlying
     mapping(address => address) public wrapped_tokens;
 
     address[] public tokens;
@@ -31,7 +31,7 @@ contract Destination is AccessControl {
         public
         onlyRole(WARDEN_ROLE)
     {
-        address wrapped = wrapped_tokens[_underlying_token];
+        address wrapped = underlying_tokens[_underlying_token];
         require(wrapped != address(0), "token not registered");
 
         emit Wrap(_underlying_token, wrapped, _recipient, _amount);
@@ -39,7 +39,7 @@ contract Destination is AccessControl {
     }
 
     function unwrap(address _wrapped_token, address _recipient, uint256 _amount) public {
-        address underlying = underlying_tokens[_wrapped_token];
+        address underlying = wrapped_tokens[_wrapped_token];
         require(underlying != address(0), "token not registered");
 
         emit Unwrap(underlying, _wrapped_token, msg.sender, _recipient, _amount);
@@ -51,7 +51,7 @@ contract Destination is AccessControl {
         onlyRole(CREATOR_ROLE)
         returns (address)
     {
-        require(wrapped_tokens[_underlying_token] == address(0), "token already exists");
+        require(underlying_tokens[_underlying_token] == address(0), "token already exists");
 
         BridgeToken wrapped = new BridgeToken(
             _underlying_token,
@@ -60,10 +60,11 @@ contract Destination is AccessControl {
             address(this)
         );
 
-        wrapped_tokens[_underlying_token] = address(wrapped);
-        underlying_tokens[address(wrapped)] = _underlying_token;
+        // Correct direction
+        underlying_tokens[_underlying_token] = address(wrapped);
+        wrapped_tokens[address(wrapped)] = _underlying_token;
 
-        tokens.push(_underlying_token);
+        tokens.push(address(wrapped));
 
         emit Creation(_underlying_token, address(wrapped));
         return address(wrapped);
