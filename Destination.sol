@@ -37,7 +37,7 @@ contract Destination is AccessControl {
     address underlying = wrapped_tokens[_wrapped_token];
     require(underlying != address(0), "token not registered");
 
-    BridgeToken(_wrapped_token).burn(msg.sender, _amount);
+    BridgeToken(_wrapped_token).burn(_amount);
 
     emit Unwrap(underlying, _wrapped_token, msg.sender, _recipient, _amount);
 	}
@@ -46,7 +46,7 @@ contract Destination is AccessControl {
 		//YOUR CODE HERE
     require(underlying_tokens[_underlying_token] == address(0), "token already exists");
 
-    BridgeToken wrapped = new BridgeToken(_underlying_token, name, symbol);
+    BridgeToken wrapped = new BridgeToken(_underlying_token, name, symbol, address(this));
 
     underlying_tokens[_underlying_token] = address(wrapped);
     wrapped_tokens[address(wrapped)] = _underlying_token;
