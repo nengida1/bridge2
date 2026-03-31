@@ -9,7 +9,7 @@ contract Destination is AccessControl {
     bytes32 public constant WARDEN_ROLE = keccak256("BRIDGE_WARDEN_ROLE");
     bytes32 public constant CREATOR_ROLE = keccak256("CREATOR_ROLE");
 
-    // NOTE: despite the variable names, the tests expect:
+    // tests expect:
     // wrapped_tokens[underlying] = wrapped
     // underlying_tokens[wrapped] = underlying
     mapping(address => address) public underlying_tokens;
@@ -42,6 +42,8 @@ contract Destination is AccessControl {
         require(underlying != address(0), "token not registered");
 
         emit Unwrap(underlying, _wrapped_token, msg.sender, _recipient, _amount);
+
+        ERC20(_wrapped_token).transferFrom(msg.sender, address(this), _amount);
         BridgeToken(_wrapped_token).burn(_amount);
     }
 
