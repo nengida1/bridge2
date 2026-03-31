@@ -9,8 +9,8 @@ contract Destination is AccessControl {
     bytes32 public constant WARDEN_ROLE = keccak256("BRIDGE_WARDEN_ROLE");
     bytes32 public constant CREATOR_ROLE = keccak256("CREATOR_ROLE");
 
-    mapping(address => address) public underlying_tokens; // wrapped => underlying
-    mapping(address => address) public wrapped_tokens;    // underlying => wrapped
+    mapping(address => address) public underlying_tokens;
+    mapping(address => address) public wrapped_tokens;
     address[] public tokens;
 
     event Creation(address indexed underlying_token, address indexed wrapped_token);
@@ -23,6 +23,9 @@ contract Destination is AccessControl {
         _grantRole(WARDEN_ROLE, admin);
     }
 
+    /**
+     * @dev Mints wrapped tokens. Called by a Warden after seeing a deposit on the source chain.
+     */
     function wrap(address _underlying_token, address _recipient, uint256 _amount)
         public
         onlyRole(WARDEN_ROLE)
@@ -34,16 +37,23 @@ contract Destination is AccessControl {
         BridgeToken(wrapped).mint(_recipient, _amount);
     }
 
+    /**
+     * @dev Burns wrapped tokens from the user to "return" them to the source chain.
+     * Note: User must have called wrapped_token.approve(destination, amount) first.
+     */
     function unwrap(address _wrapped_token, address _recipient, uint256 _amount) public {
         address underlying = underlying_tokens[_wrapped_token];
         require(underlying != address(0), "token not registered");
 
         emit Unwrap(underlying, _wrapped_token, msg.sender, _recipient, _amount);
-
-        ERC20(_wrapped_token).transferFrom(msg.sender, address(this), _amount);
-        BridgeToken(_wrapped_token).burn(_amount);
+        
+        // FIX: Burn tokens from the user calling the function, not the contract itself.
+        BridgeToken(_wrapped_token).burnFrom(msg.sender, _amount);
     }
 
+    /**
+     * @dev Deploys a new BridgeToken for a specific source-chain asset.
+     */
     function createToken(address _underlying_token, string memory name, string memory symbol)
         public
         onlyRole(CREATOR_ROLE)
@@ -55,7 +65,7 @@ contract Destination is AccessControl {
             _underlying_token,
             name,
             symbol,
-            address(this)
+            address(this) 
         );
 
         wrapped_tokens[_underlying_token] = address(wrapped);
