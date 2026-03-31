@@ -9,11 +9,8 @@ contract Destination is AccessControl {
     bytes32 public constant WARDEN_ROLE = keccak256("BRIDGE_WARDEN_ROLE");
     bytes32 public constant CREATOR_ROLE = keccak256("CREATOR_ROLE");
 
-    // tests expect:
-    // wrapped_tokens[underlying] = wrapped
-    // underlying_tokens[wrapped] = underlying
-    mapping(address => address) public underlying_tokens;
-    mapping(address => address) public wrapped_tokens;
+    mapping(address => address) public underlying_tokens; // wrapped => underlying
+    mapping(address => address) public wrapped_tokens;    // underlying => wrapped
     address[] public tokens;
 
     event Creation(address indexed underlying_token, address indexed wrapped_token);
