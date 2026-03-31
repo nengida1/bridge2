@@ -34,22 +34,22 @@ contract Destination is AccessControl {
         address wrapped = wrapped_tokens[_underlying_token];
         require(wrapped != address(0), "token not registered");
 
-        BridgeToken(wrapped).mint(_recipient, _amount);
         emit Wrap(_underlying_token, wrapped, _recipient, _amount);
+        BridgeToken(wrapped).mint(_recipient, _amount);
     }
 
     function unwrap(address _wrapped_token, address _recipient, uint256 _amount) public {
         address underlying = underlying_tokens[_wrapped_token];
         require(underlying != address(0), "token not registered");
 
-        BridgeToken(_wrapped_token).burn(_amount);
         emit Unwrap(underlying, _wrapped_token, msg.sender, _recipient, _amount);
+        BridgeToken(_wrapped_token).burn(_amount);
     }
 
     function createToken(address _underlying_token, string memory name, string memory symbol)
         public
         onlyRole(CREATOR_ROLE)
-        returns(address)
+        returns (address)
     {
         require(wrapped_tokens[_underlying_token] == address(0), "token already exists");
 
