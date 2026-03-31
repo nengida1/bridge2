@@ -9,12 +9,8 @@ contract Destination is AccessControl {
     bytes32 public constant WARDEN_ROLE = keccak256("BRIDGE_WARDEN_ROLE");
     bytes32 public constant CREATOR_ROLE = keccak256("CREATOR_ROLE");
 
-    // wrapped => underlying
-    mapping(address => address) public underlying_tokens;
-
-    // underlying => wrapped
-    mapping(address => address) public wrapped_tokens;
-
+    mapping(address => address) public underlying_tokens; // wrapped => underlying
+    mapping(address => address) public wrapped_tokens;    // underlying => wrapped
     address[] public tokens;
 
     event Creation(address indexed underlying_token, address indexed wrapped_token);
@@ -53,12 +49,7 @@ contract Destination is AccessControl {
     {
         require(wrapped_tokens[_underlying_token] == address(0), "token already exists");
 
-        BridgeToken wrapped = new BridgeToken(
-            _underlying_token,
-            name,
-            symbol,
-            address(this)
-        );
+        BridgeToken wrapped = new BridgeToken(_underlying_token, name, symbol, address(this));
 
         wrapped_tokens[_underlying_token] = address(wrapped);
         underlying_tokens[address(wrapped)] = _underlying_token;
